@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ITAEM</title>
+    <link href="lib/layui.css" type="text/css" rel="stylesheet">
+    <script src="lib/vue-2.4.0.js" type="text/javascript"></script>
+    <script src="lib/vue-resource-1.3.4.js"></script>
+</head>
+<body>
+<div id="app" class="layui-container">
+
+    <div className="layui-row layui-col-space2">
+        <div class="layui-col-md1">
+            <input type="text" v-model="searchId" required lay-verify="required" placeholder="id" class="layui-input" autocomplete="off"/>
+        </div>
+        <div class="layui-col-md1">
+            <button id="btn2"  class="layui-btn" @click.prevent="search()">搜索</button>
+        </div>
+    </div>
+
+    <table class="layui-table">
+        <colgroup>
+            <col width="150">
+            <col width="200">
+            <col>
+        </colgroup>
+        <thead>
+        <tr>
+            <th>博客id</th>
+            <th>标题</th>
+            <th>文章链接</th>
+            <th>作者</th>
+            <th>是否展示</th>
+            <th>修改</th>
+            <th>删除</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="item in list" :key="item.id">
+            <td>{{item.id}}</td>
+            <td>{{item.title}}</td>
+            <td>{{item.link}}</td>
+            <td>{{item.author}}</td>
+            <td>{{item.tag}}</td>
+            <th>
+                <a class="layui-btn layui-btn-normal" @click.prevent="upd(item.id)">修改</a>
+            </th>
+            <th>
+                <button class="layui-btn layui-btn-danger" @click.prevent="del(item.id)">删除</button>
+            </th>
+        </tr>
+        </tbody>
+    </table>
+    <a href="add.html" class="layui-btn layui-btn-warm">添加</a>
+</div>
+<script>
+
+    // 如果我们通过全局配置了，请求的数据接口 根域名，则 ，在每次单独发起 http 请求的时候，请求的 url 路径，应该以相对路径开头，前面不能带 /  ，否则 不会启用根路径做拼接；
+    Vue.http.options.root = 'http://120.79.197.130:8080/';
+
+    // 全局启用 emulateJSON 选项:如果Web服务器无法处理编码为application/json的请求，你可以启用emulateJSON选项。
+    Vue.http.options.emulateJSON = true;
+
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            searchId: '',// 搜索用的
+            list: [] // 存放列表数据
+        },
+        created() { // 当 vm 实例 的 data 和 methods 初始化完毕后，vm实例会自动执行created 这个生命周期函数
+            this.getAllList()
+        },
+        methods: {
+            getAllList() {
+                // 由于已经导入了 Vue-resource这个包，所以 ，可以直接通过  this.$http 来发起数据请求
+                this.$http.get('getAllBlogs').then(result => {
+                    // 注意： 通过 $http 获取到的数据，都在 result.body 中放着
+                    var result = result.body
+                    if (result.code === 200) {
+                        // 成功了
+                        this.list = result.data
+                        console.log(result.data)
+                    } else {
+                        // 失败了
+                        alert('获取数据失败！')
+                    }
+                })
+            },
+            del(id) {
+                this.$http.delete('deleteBlogById/' + id).then(result => {
+                    if (result.body.code === 200) {
+                        // 删除成功
+                        this.getAllList()
+                    } else {
+                        alert('删除失败！')
+                    }
+                })
+            },
+            search() {
+                this.$http.get('getBlogById/'+this.searchId).then(result => {
+                    var result = result.body
+                    if (result.code === 200) {
+                        this.list=[]
+                        this.list.push(result.data)
+                    } else {
+                        alert('查找失败！')
+                    }
+                })
+            },
+            upd(updateId){
+                window.location.href="http://localhost:63343/forVue/VueCRUD/update.html?#"+updateId
+            }
+        }
+    })
+</script>
+</body>
+</html>
